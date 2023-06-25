@@ -68,6 +68,7 @@ function sendEditSingleRankForm(player, selectedPlayer, selectedRank, errorMsg =
             "ds": rankDisplay
         }
         selectedPlayer.removeTag(`tsrank:{${JSON.stringify(selectedRank)}}.`)
+        selectedPlayer.addTag(`tsrank:{${JSON.stringify(editedRank)}}.`)
         player.sendMessage(`§aThe rank §l${editedRank.ds}§a was succesfully edited for §l${selectedPlayer.name}§r`)
         player.playSound('random.orb')
     })

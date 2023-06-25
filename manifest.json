@@ -1,8 +1,8 @@
 {
     "format_version": 2,
     "header": {
-        "name": "Ranks",
-        "description": "Addon creado usando solo una mano (y la nariz) lol",
+        "name": "Teseract Rank Manager",
+        "description": "Create your own custom ranks using by filling forms!",
         "uuid": "442a5bb1-851c-4f6b-b9d8-f01d5624c0d9",
         "min_engine_version": [
             1,
