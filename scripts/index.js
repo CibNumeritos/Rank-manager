@@ -70,7 +70,8 @@ function sendPlayerAddRankForm(player, selectedPlayer, errorMsg = undefined) {
             "ds": rankDisplay
         }
         selectedPlayer.addTag(`rank:{${JSON.stringify(createdRank)}}.`)
-        player.sendMessage(`The rank ${createdRank.ds} was succesfully added to ${selectedPlayer.name}`)
+        player.sendMessage(`§aThe rank §l${createdRank.ds}§r was succesfully added to §l${selectedPlayer.name}§r`)
+        player.playSound('random.orb')
     })
 }
 function sendEditPlayerRanksForm(player, selectedPlayer) {
