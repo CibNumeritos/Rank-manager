@@ -1,14 +1,7 @@
-// Este archivo fue escrito por CibNumeritos#1094, cualquier uso, modificación o intento de lucro sin autorización del mismo sera penalizado. 
-// This file was written by CibNumeritos#1094, any use, modification or profit intent whitout their autorization will be penalized. 
+// Este archivo fue escrito por nxmberscib, cualquier uso, modificación o intento de lucro sin autorización del mismo sera penalizado. 
+// This file was written by nxmberscib, any use, modification or profit intent whitout their autorization will be penalized. 
 import { world, EquipmentSlot, system, EntityDamageCause, ItemStack, Player, MolangVariableMap, DynamicPropertiesDefinition } from '@minecraft/server';
 import { ActionFormData, FormCancelationReason, MessageFormData, ModalFormData, ActionFormResponse, FormResponse, MessageFormResponse, ModalFormResponse } from "@minecraft/server-ui";
-function delay(ticks) {
-    return new Promise((resolve, reject) => {
-        system.runTimeout(() => {
-            resolve()
-        }, ticks)
-    })
-}
 /**
  * 
  * @param {Player} player 
@@ -21,7 +14,6 @@ function searchRanks(player, returnParsed = true) {
     if (!ranks) {
         return undefined
     }
-    // console.warn(ranks.map(obj => {console.warn(JSON.parse(obj).); return "negro"}))
     return returnParsed ? (ranks.map(obj => JSON.parse(obj).ds).join(', ')) : ranks;
 }
 /**
