@@ -10,11 +10,11 @@ import { ActionFormData, FormCancelationReason, MessageFormData, ModalFormData, 
  */
 function searchRanks(player, returnParsed = true) {
     /**@type {RegExpMatchArray} */
-    let ranks = player.getTags().toString()?.match(/(?<=rank:{).*?(})/g);
+    let ranks = player.getTags().toString()?.match(/(?<=tsrank:{).*?(})/g);
     if (!ranks) {
         return undefined
     }
-    return returnParsed ? (ranks.map(obj => JSON.parse(obj).ds).join(', ')) : ranks;
+    return returnParsed ? (ranks.map(obj => JSON.parse(obj)?.ds).join(', ')) : ranks;
 }
 /**
  * @template {ActionFormData | MessageFormData | ModalFormData} Form
@@ -38,6 +38,40 @@ function openForm(player, form, callback) {
         };
     })
 }
+function sendEditSingleRankForm(player, selectedPlayer, selectedRank, errorMsg = undefined) {
+    const ranksForm = new ModalFormData()
+    system.run(() => {
+        if (errorMsg != undefined) {
+            ranksForm.title("§cError - Edit rank")
+        } else {
+            ranksForm.title("Edit rank")
+        }
+        ranksForm.textField(errorMsg == 0 || errorMsg == 2 ? '§cRank new display name' : 'Rank new display name', "Max. 32 characters.")
+        ranksForm.textField(errorMsg == 1 || errorMsg == 2 ? '§cRank new identifier' : 'Rank new identifier', "Max. 16 characters.")
+    })
+    openForm(player, ranksForm, (response) => {
+        if (response.canceled) {
+            sendEditPlayerRanksForm(player, selectedPlayer)
+            return;
+        };
+        let errorLevel = -1;
+        /**@type {string}*/
+        const rankDisplay = response.formValues[0]
+        /**@type {string}*/
+        const rankIdentifier = response.formValues[1]
+        if (rankDisplay.length > 32) errorLevel++
+        if (rankIdentifier.length > 16) errorLevel++
+        if (rankDisplay.length > 32 || rankIdentifier.length > 16) errorLevel++
+        if (errorLevel > -1) return sendEditSingleRankForm(player, selectedPlayer, selectedRank, errorLevel)
+        const editedRank = {
+            "id": rankIdentifier,
+            "ds": rankDisplay
+        }
+        selectedPlayer.removeTag(`tsrank:{${JSON.stringify(selectedRank)}}.`)
+        player.sendMessage(`§aThe rank §l${editedRank.ds}§a was succesfully edited for §l${selectedPlayer.name}§r`)
+        player.playSound('random.orb')
+    })
+};
 function sendPlayerAddRankForm(player, selectedPlayer, errorMsg = undefined) {
     const ranksForm = new ModalFormData()
     system.run(() => {
@@ -69,8 +103,8 @@ function sendPlayerAddRankForm(player, selectedPlayer, errorMsg = undefined) {
             "id": rankIdentifier,
             "ds": rankDisplay
         }
-        selectedPlayer.addTag(`rank:{${JSON.stringify(createdRank)}}.`)
-        player.sendMessage(`§aThe rank §l${createdRank.ds}§r was succesfully added to §l${selectedPlayer.name}§r`)
+        selectedPlayer.addTag(`tsrank:{${JSON.stringify(createdRank)}}.`)
+        player.sendMessage(`§aThe rank §l${createdRank.ds}§a was succesfully added to §l${selectedPlayer.name}§r`)
         player.playSound('random.orb')
     })
 }
@@ -99,6 +133,7 @@ function sendEditPlayerRanksForm(player, selectedPlayer) {
         };
         const selectedRank = !ranks ? undefined : JSON.parse(ranks[response.selection]);
         if (!selectedRank) return sendPlayerAddRankForm(player, selectedPlayer)
+        sendEditSingleRankForm(player, selectedPlayer, selectedRank)
     });
 };
 
@@ -175,7 +210,7 @@ function configDefaultRank(player, errorMsg = undefined) {
             "id": rankIdentifier,
             "ds": rankDisplay
         }
-        world.setDynamicProperty('tsranks::default', `rank:{${JSON.stringify(createdRank)}}`)
+        world.setDynamicProperty('tsranks::default', `tsrank:{${JSON.stringify(createdRank)}}`)
         player.sendMessage(`§aThe rank §l${createdRank.ds}§r§a was succesfully set as default rank`)
         player.playSound('random.orb')
         for (const tag of rankTags.split(";")) {
@@ -210,7 +245,7 @@ function sendMainRanksForm(player) {
 };
 world.afterEvents.worldInitialize.subscribe((arg) => {
     const def = new DynamicPropertiesDefinition()
-        .defineString('tsranks::default')
+        .defineString('tsranks::default', 256)
     arg.propertyRegistry.registerWorldDynamicProperties(def)
 })
 world.beforeEvents.chatSend.subscribe(async (arg) => {
@@ -228,11 +263,14 @@ system.runInterval(() => {
         for (const player of world.getPlayers()) {
             let ranks = searchRanks(player);
             if (!ranks) {
-                player.addTag(world.getDynamicProperty('tsranks::default'));
+                let defaultrank = world.getDynamicProperty('tsranks::default') ?? undefined
+                if (!!defaultrank) {
+                    player.addTag(defaultrank);
                 ranks = searchRanks(player);
+                }
             };
             const health = player.getComponent('minecraft:health');
-            player.nameTag = `§r§7[§r${ranks}§7]§r ${player.name}\n${Math.floor(health.current)}/${Math.floor(health.value)}`;
+            player.nameTag = `§r§7[§r${ranks ?? "§8User§r"}§7]§r ${player.name}\n§c${Math.floor(health.current)}§7/§c${Math.floor(health.value)}§r`;
         };
     });
 }, 5);
