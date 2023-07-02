@@ -59,20 +59,61 @@ function sendEditSingleRankForm(player, selectedPlayer, selectedRank, errorMsg =
         const rankDisplay = response.formValues[0]
         /**@type {string}*/
         const rankIdentifier = response.formValues[1]
-        if (rankDisplay.length > 32) errorLevel++
-        if (rankIdentifier.length > 16) errorLevel++
-        if (rankDisplay.length > 32 || rankIdentifier.length > 16) errorLevel++
+        if (rankDisplay.length > 32 || rankDisplay.length === 0) errorLevel++
+        if (rankIdentifier.length > 16 || rankIdentifier.length === 0) errorLevel++
+        if (rankDisplay.length > 32 || rankDisplay.length === 0 || rankIdentifier.length > 16 || rankIdentifier.length === 0) errorLevel++
         if (errorLevel > -1) return sendEditSingleRankForm(player, selectedPlayer, selectedRank, errorLevel)
         const editedRank = {
             "id": rankIdentifier,
             "ds": rankDisplay
         }
-        selectedPlayer.removeTag(`tsrank:{${JSON.stringify(selectedRank)}}.`)
-        selectedPlayer.addTag(`tsrank:{${JSON.stringify(editedRank)}}.`)
-        player.sendMessage(`§aThe rank §l${editedRank.ds}§a was succesfully edited for §l${selectedPlayer.name}§r`)
+        selectedPlayer.removeTag(`tsrank:{${JSON.stringify(selectedRank)}}`)
+        selectedPlayer.addTag(`tsrank:{${JSON.stringify(editedRank)}}`)
+        player.sendMessage(`§aThe rank §l${editedRank.ds}§r§a was succesfully edited for §l${selectedPlayer.name}§r`)
         player.playSound('random.orb')
     })
 };
+function sendRemovePlayerRankForm(player, selectedPlayer, selectedRank) {
+    const ranksForm = new ActionFormData()
+    system.run(() => {
+        ranksForm.title(`Deleting rank: ${selectedRank.ds}§r`)
+        ranksForm.body("Are you sure you want to remove rank? This action is §cirreversible.§r")
+        ranksForm.button("Remove")
+        ranksForm.button("Cancel")
+    })
+    openForm(player, ranksForm, (response) => {
+        if (response.canceled) {
+            sendEditSingleOrRemoveRankForm(player, selectedPlayer, selectedRank)
+            return;
+        };
+        if (response.selection == 0) {
+            selectedPlayer.removeTag(`tsrank:{${JSON.stringify(selectedRank)}}`)
+            player.sendMessage(`§aThe rank §l${selectedRank.ds}§r§a was succesfully removed from §l${selectedPlayer.name}§r`)
+            player.playSound('random.orb')    
+        } else if (response.selection == 1) { 
+            sendEditSingleOrRemoveRankForm(player, selectedPlayer, selectedRank)
+        }
+    })
+}
+function sendEditSingleOrRemoveRankForm(player, selectedPlayer, selectedRank) {
+    const ranksForm = new ActionFormData()
+    system.run(() => {
+        ranksForm.title(`Action on rank: ${selectedRank.ds}§r`)
+        ranksForm.button("Edit rank")
+        ranksForm.button("Remove rank")
+    })
+    openForm(player, ranksForm, (response) => {
+        if (response.canceled) {
+            sendEditPlayerRanksForm(player, selectedPlayer)
+            return;
+        };
+        if (response.selection == 0) {
+            sendEditSingleRankForm(player, selectedPlayer, selectedRank)
+        } else if (response.selection == 1) { 
+            sendRemovePlayerRankForm(player, selectedPlayer, selectedRank)
+        }
+    });
+}
 function sendPlayerAddRankForm(player, selectedPlayer, errorMsg = undefined) {
     const ranksForm = new ModalFormData()
     system.run(() => {
@@ -87,7 +128,7 @@ function sendPlayerAddRankForm(player, selectedPlayer, errorMsg = undefined) {
     })
     openForm(player, ranksForm, (response) => {
         if (response.canceled) {
-            sendPlayerActionSelectionForm(player, selectedPlayer)
+            sendManagePlayersRanksForm(player);
             return;
         };
         let errorLevel = -1;
@@ -95,16 +136,16 @@ function sendPlayerAddRankForm(player, selectedPlayer, errorMsg = undefined) {
         const rankDisplay = response.formValues[0]
         /**@type {string}*/
         const rankIdentifier = response.formValues[1]
-        if (rankDisplay.length > 32) errorLevel++
-        if (rankIdentifier.length > 16) errorLevel++
-        if (rankDisplay.length > 32 || rankIdentifier.length > 16) errorLevel++
+        if (rankDisplay.length > 32 || rankDisplay.length === 0) errorLevel++
+        if (rankIdentifier.length > 16 || rankIdentifier.length === 0) errorLevel++
+        if (rankDisplay.length > 32 || rankDisplay.length === 0 || rankIdentifier.length > 16 || rankIdentifier.length === 0) errorLevel++
         if (errorLevel > -1) return sendPlayerAddRankForm(player, selectedPlayer, errorLevel)
         const rankTags = response.formValues[2]
         const createdRank = {
             "id": rankIdentifier,
             "ds": rankDisplay
         }
-        selectedPlayer.addTag(`tsrank:{${JSON.stringify(createdRank)}}.`)
+        selectedPlayer.addTag(`tsrank:{${JSON.stringify(createdRank)}}`)
         player.sendMessage(`§aThe rank §l${createdRank.ds}§a was succesfully added to §l${selectedPlayer.name}§r`)
         player.playSound('random.orb')
     })
@@ -129,12 +170,12 @@ function sendEditPlayerRanksForm(player, selectedPlayer) {
     })
     openForm(player, ranksForm, (response) => {
         if (response.canceled) {
-            sendPlayerActionSelectionForm(player, selectedPlayer)
+            sendManagePlayersRanksForm(player)
             return;
         };
         const selectedRank = !ranks ? undefined : JSON.parse(ranks[response.selection]);
         if (!selectedRank) return sendPlayerAddRankForm(player, selectedPlayer)
-        sendEditSingleRankForm(player, selectedPlayer, selectedRank)
+        sendEditSingleOrRemoveRankForm(player, selectedPlayer, selectedRank)
     });
 };
 
@@ -173,7 +214,7 @@ function sendManagePlayersRanksForm(player) {
     })
     openForm(player, ranksForm, (response) => {
         if (response.canceled) {
-            sendMainRanksForm(sender);
+            sendMainRanksForm(player);
             return;
         }
         const selectedPlayer = world.getPlayers()[response.selection]
@@ -202,10 +243,10 @@ function configDefaultRank(player, errorMsg = undefined) {
         const rankDisplay = response.formValues[0]
         /**@type {string}*/
         const rankIdentifier = response.formValues[1]
-        if (rankDisplay.length > 32) errorLevel++
-        if (rankIdentifier.length > 16) errorLevel++
-        if (rankDisplay.length > 32 || rankIdentifier.length > 16) errorLevel++
-        if (errorLevel > -1) return sendPlayerAddRankForm(player, selectedPlayer, errorLevel)
+        if (rankDisplay.length > 32 || rankDisplay.length === 0) errorLevel++
+        if (rankIdentifier.length > 16 || rankIdentifier.length === 0) errorLevel++
+        if (rankDisplay.length > 32 || rankDisplay.length === 0 || rankIdentifier.length > 16 || rankIdentifier.length === 0) errorLevel++
+        if (errorLevel > -1) return configDefaultRank(player, errorLevel)
         const rankTags = response.formValues[2]
         const createdRank = {
             "id": rankIdentifier,
@@ -267,7 +308,7 @@ system.runInterval(() => {
                 let defaultrank = world.getDynamicProperty('tsranks::default') ?? undefined
                 if (!!defaultrank) {
                     player.addTag(defaultrank);
-                ranks = searchRanks(player);
+                    ranks = searchRanks(player);
                 }
             };
             const health = player.getComponent('minecraft:health');
