@@ -59,7 +59,7 @@ function openForm(player, form, callback) {
   system.run(async () => {
     while (true) {
       let response = await form.show(player);
-      if (response?.cancelationReason !== FormCancelationReason.userBusy) {
+      if (response?.cancelationReason !== FormCancelationReason.UserBusy) {
         try {
           callback(response);
         } catch (error) {
@@ -120,9 +120,10 @@ function sendEditSingleRankForm(
     selectedPlayer.removeTag(`tsrank:{${JSON.stringify(selectedRank)}}`);
     selectedPlayer.addTag(`tsrank:{${JSON.stringify(editedRank)}}`);
     player.sendMessage(
-      `§aThe rank §l${editedRank.ds}§r§a was succesfully edited for §l${selectedPlayer.name}§r`
+      `§2The rank §r${editedRank.ds}§r§2 was succesfully edited for §l${selectedPlayer.name}§r`
     );
     player.playSound("random.orb");
+    sendEditPlayerRanksForm(player, selectedPlayer);
   });
 }
 function sendRemovePlayerRankForm(player, selectedPlayer, selectedRank) {
@@ -143,9 +144,10 @@ function sendRemovePlayerRankForm(player, selectedPlayer, selectedRank) {
     if (response.selection == 0) {
       selectedPlayer.removeTag(`tsrank:{${JSON.stringify(selectedRank)}}`);
       player.sendMessage(
-        `§aThe rank §l${selectedRank.ds}§r§a was succesfully removed from §l${selectedPlayer.name}§r`
+        `§2The rank §r${selectedRank.ds}§r§2 was succesfully removed from §l${selectedPlayer.name}§r`
       );
       player.playSound("random.orb");
+      sendEditPlayerRanksForm(player, selectedPlayer);
     } else if (response.selection == 1) {
       sendEditSingleOrRemoveRankForm(player, selectedPlayer, selectedRank);
     }
@@ -212,9 +214,10 @@ function sendPlayerAddRankForm(player, selectedPlayer, errorMsg = undefined) {
     };
     selectedPlayer.addTag(`tsrank:{${JSON.stringify(createdRank)}}`);
     player.sendMessage(
-      `§aThe rank §l${createdRank.ds}§a was succesfully added to §l${selectedPlayer.name}§r`
+      `§2The rank §r${createdRank.ds}§r§2 was succesfully added to §l${selectedPlayer.name}§r`
     );
     player.playSound("random.orb");
+    sendManagePlayersRanksForm(player);
   });
 }
 function sendEditPlayerRanksForm(player, selectedPlayer) {
@@ -260,7 +263,7 @@ function sendPlayerActionSelectionForm(player, selectedPlayer) {
   });
   openForm(player, ranksForm, (response) => {
     if (response.canceled) {
-      sendManagePlayersRanksForm(player);
+      sendManagePlayersRanksForm(player, selectedPlayer);
       return;
     }
     console.warn(response.selection);
@@ -275,7 +278,7 @@ function sendPlayerActionSelectionForm(player, selectedPlayer) {
  *
  * @param {Player} player
  */
-function sendManagePlayersRanksForm(player) {
+function sendManagePlayersRanksForm(player, selectedPlayer) {
   const ranksForm = new ActionFormData();
   system.run(() => {
     for (const _player of world.getPlayers()) {
@@ -336,7 +339,7 @@ function configDefaultRank(player, errorMsg = undefined) {
       `tsrank:{${JSON.stringify(createdRank)}}`
     );
     player.sendMessage(
-      `§aThe rank §l${createdRank.ds}§r§a was succesfully set as default rank`
+      `§2The rank §r${createdRank.ds}§r§2 was succesfully set as default rank`
     );
     player.playSound("random.orb");
     for (const tag of rankTags.split(";")) {
@@ -383,13 +386,13 @@ world.afterEvents.worldInitialize.subscribe((arg) => {
 world.beforeEvents.chatSend.subscribe(async (arg) => {
   arg.cancel = true;
   const { sender, message } = arg;
-  await null
+  await null;
   if (message.startsWith("!ranks") && sender.hasTag("RankModerator")) {
     sendMainRanksForm(sender);
   } else {
     let ranks = searchRanks(sender);
     world.sendMessage(
-      `§7[§r${ranks ?? "§8User§r"}§7]§r ${sender.name}§8:§r ${message}`
+      `§7[§r${ranks ?? "§8User§r"}§7]§r ${sender.name}§8 >>§r ${message}`
     );
   }
 });
