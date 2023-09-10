@@ -383,6 +383,7 @@ world.afterEvents.worldInitialize.subscribe((arg) => {
 world.beforeEvents.chatSend.subscribe(async (arg) => {
   arg.cancel = true;
   const { sender, message } = arg;
+  await null
   if (message.startsWith("!ranks") && sender.hasTag("RankModerator")) {
     sendMainRanksForm(sender);
   } else {
